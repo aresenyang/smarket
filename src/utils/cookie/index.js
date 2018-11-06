@@ -1,5 +1,5 @@
 import $secret from './secret'
-import $aux from './aux'
+import $assist from './assist'
 
 class Cookie {
     constructor(config){
@@ -25,7 +25,7 @@ class Cookie {
      * @param {*} key 
      */
     getCookie(key){
-        let $val = $aux.format()[key];
+        let $val = $assist.format()[key];
         if($val){
             let v = $secret.uncompile($val);
             let val = JSON.parse(v);

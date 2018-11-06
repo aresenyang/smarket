@@ -1,9 +1,10 @@
 import $secret from './secret'
 import $assist from './assist'
 
+let cookie;
 class Cookie {
     constructor(config){
-        this.cookie = config.cookie;
+        cookie = config.cookie;
     }
     /**
      * 存储/修改 cookie
@@ -13,11 +14,11 @@ class Cookie {
      */
     setCookie(key, value, time){
         let val = JSON.stringify(value);
-        let t = time?time:this.cookie.setData.expires
+        let t = time?time:cookie.setData.expires
         let d = new Date();
         d.setTime(d.getTime()+(t*24*60*60*1000));
         let expires = "expires="+d.toGMTString();
-        document.cookie = `${key}=${$secret.compile(val)}; expires=${expires}; path=${this.cookie.setData.domain}`
+        document.cookie = `${key}=${$secret.compile(val)}; expires=${expires}; path=${cookie.setData.domain}`
     }
 
     /**

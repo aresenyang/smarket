@@ -9,7 +9,7 @@ class Smarket {
         this.config = config;
         this.cookie = new Cookie(config);
         this.wx = wx;
-        this.ajax = (new Ajax(config)).ajax;
+        this.ajax = (new Ajax(config));
         this.url = url;
         this.weixin = new WeiXin(config)
     }

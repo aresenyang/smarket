@@ -1,22 +1,23 @@
 import axios from 'axios'
 import Cookie from '../cookie'
 
+let ajax,cookie;
 class Ajax {
     constructor(config){
         /* 初始化 cookie */
-        this.cookie = new Cookie(config)
+        cookie = new Cookie(config)
 
         /**
          * 初始化 ajax
          */
-        this.ajax = axios.create({
+        ajax = axios.create({
             baseURL: config.api
         });
 
         /**
          * 拦截 ajax 请求
          */
-        this.ajax.interceptors.request.use((request)=> {
+        ajax.interceptors.request.use((request)=> {
             request.data.globalUserId = this.getGlobalUserId();
             return request;
         });
@@ -24,23 +25,54 @@ class Ajax {
         /**
          * 拦截 ajax 响应
          */
-        this.ajax.interceptors.response.use((response)=> {
+        ajax.interceptors.response.use((response)=> {
             return response.data.body;
         });
     }
+
+    /**
+     * post
+     * @param {*} url 
+     * @param {*} data 
+     */
+    post(url, data){
+        return new Promise((resolve, reject)=>{
+            ajax.post(url,data).then(data=>{
+                resolve(data)
+            }).catch((data)=>{
+                reject(data)
+            })
+        })
+    }
+
+    /**
+     * get
+     * @param {*} url 
+     * @param {*} data 
+     */
+    get(url, data){
+        return new Promise((resolve, reject)=>{
+            ajax.get(url,data).then(data=>{
+                resolve(data)
+            }).catch((data)=>{
+                reject(data)
+            })
+        })
+    }
+
     /**
      * 获取 globalUserId
      */
     getGlobalUserId(){
-        if(this.cookie.getCookie('globalUserId')){
-            return this.cookie.getCookie('globalUserId')
+        if(cookie.getCookie('globalUserId')){
+            return cookie.getCookie('globalUserId')
         }else{
             let uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c)=>{
                 let r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
                 return v.toString(16);
             });
             uuid = uuid.replace(/-/g,'');
-            this.cookie.setCookie('globalUserId',uuid);
+            cookie.setCookie('globalUserId',uuid);
             return uuid
         }
     }

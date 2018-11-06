@@ -3,12 +3,89 @@ import Ajax from '../ajax'
 import Cookie from '../cookie'
 import wx from 'weixin-js-sdk'
 
+let cookie,ajax,$config;
+
+/**
+ * 注入微信配置信息
+ */
+function wxConfig(){
+    ajax.post('/article/share', {
+        url: window.location.href.split('#')[0]
+    }).then((data)=> {
+        let _rs = data.content;
+        _rs.jsApiList =  [
+            'onMenuShareTimeline',
+            'onMenuShareAppMessage',
+            'onMenuShareQQ',
+            'onMenuShareWeibo',
+            'scanQRCode',
+            'chooseImage',
+            'previewImage',
+            'uploadImage',
+            'downloadImage',
+            'hideAllNonBaseMenuItem',
+            'checkJsApi',
+            'hideMenuItems',
+            'showMenuItems'
+        ];
+        wx.config(_rs);
+    });
+}
+
+/**
+ * 获取code
+ */
+function getCode(weChatId){
+    ajax.post('/weChat/getAppId',{
+        weChatId: weChatId
+    }).then((data)=> {
+        let _rs = data.content;
+        if(_rs.appId){
+            let jumpUrl = $config.wx.oAuth.weChatAuthProxy+ '?proUrl=' + encodeURIComponent(url.urlDelete('code'));
+
+            let href = [
+                'https://open.weixin.qq.com/connect/oauth2/authorize?appid=',
+                _rs.appId,
+                '&redirect_uri=',
+                encodeURIComponent(jumpUrl),
+                '&response_type=code&scope=',
+                $config.wx.oAuth.isSilentAuthorise ? 'snsapi_base' : 'snsapi_userinfo',
+                '&state=',
+                '&component_appid=',
+                $config.wx.oAuth.componentAppId
+            ];
+            href.push('#wechat_redirect');
+            window.location.href = href.join('');
+        }
+    })
+}
+/**
+ * 获取openId
+ */
+function getOpenId(code){
+    return ajax.post('/contact/getByCode', {
+        weChatId: $config.wx.weChatId,
+        code: code
+    });
+}
+/**
+ * 通过openId获取用户信息
+ */
+function getUser(weChatId, openId){
+    return ajax.post('/member/loginByOpenId', {
+        weChatId: weChatId,
+        openId: openId
+    });
+}
+
+
+
 class WeiXin {
     constructor(config){
-        this.cookie = new Cookie(config);
-        this.ajax = (new Ajax(config)).ajax;
-        this.config = config;
-        this.wxConfig();
+        cookie = new Cookie(config);
+        ajax = new Ajax(config);
+        $config = config;
+        wxConfig();
         /**
          * 是否在微信
          */
@@ -16,104 +93,31 @@ class WeiXin {
     }
 
     /**
-     * 注入微信配置信息
-     */
-    wxConfig(){
-        this.ajax.post('/article/share', {
-            url: window.location.href.split('#')[0]
-        }).then((data)=> {
-            let _rs = data.content;
-            _rs.jsApiList =  [
-                'onMenuShareTimeline',
-                'onMenuShareAppMessage',
-                'onMenuShareQQ',
-                'onMenuShareWeibo',
-                'scanQRCode',
-                'chooseImage',
-                'previewImage',
-                'uploadImage',
-                'downloadImage',
-                'hideAllNonBaseMenuItem',
-                'checkJsApi',
-                'hideMenuItems',
-                'showMenuItems'
-            ];
-            wx.config(_rs);
-        });
-    }
-
-
-    /**
      * 初始化微信授权
      */
     ready(){
         return new Promise((resolve, reject)=>{
-            if(this.cookie.getCookie('openId')){
-                this.getUser(this.config.wx.weChatId, this.cookie.getCookie('openId')).then((data)=>{
+            if(cookie.getCookie('openId')){
+                getUser($config.wx.weChatId, cookie.getCookie('openId')).then((data)=>{
                     resolve(data.content)
                 })
             }else if(url.urlParams('code')){
-                this.getOpenId(url.urlParams('code')).then((data)=> {
+                getOpenId(url.urlParams('code')).then((data)=> {
                     let _rs = data.content;
                     if(_rs){
-                        this.cookie.setCookie('openId', _rs.openId);
-                        this.getUser(this.config.wx.weChatId, this.cookie.getCookie('openId')).then((data)=> {
+                        cookie.setCookie('openId', _rs.openId);
+                        getUser($config.wx.weChatId, cookie.getCookie('openId')).then((data)=> {
                             resolve(data.content)
                         })
                     }else{
-                        this.getCode(this.config.wx.weChatId);
+                        getCode($config.wx.weChatId);
                     }
                 })
             }else{
-                this.getCode(this.config.wx.weChatId);
+                getCode($config.wx.weChatId);
             }
         })
         
-    }
-    /**
-     * 获取code
-     */
-    getCode(weChatId){
-        this.ajax.post('/weChat/getAppId',{
-            weChatId: weChatId
-        }).then((data)=> {
-            let _rs = data.content;
-            if(_rs.appId){
-                let jumpUrl = this.config.wx.oAuth.weChatAuthProxy+ '?proUrl=' + encodeURIComponent(url.urlDelete('code'));
-
-                let href = [
-                    'https://open.weixin.qq.com/connect/oauth2/authorize?appid=',
-                    _rs.appId,
-                    '&redirect_uri=',
-                    encodeURIComponent(jumpUrl),
-                    '&response_type=code&scope=',
-                    this.config.wx.oAuth.isSilentAuthorise ? 'snsapi_base' : 'snsapi_userinfo',
-                    '&state=',
-                    '&component_appid=',
-                    this.config.wx.oAuth.componentAppId
-                ];
-                href.push('#wechat_redirect');
-                window.location.href = href.join('');
-            }
-        })
-    }
-    /**
-     * 获取openId
-     */
-    getOpenId(code){
-        return this.ajax.post('/contact/getByCode', {
-            weChatId: this.config.wx.weChatId,
-            code: code
-        });
-    }
-    /**
-     * 通过openId获取用户信息
-     */
-    getUser(weChatId, openId){
-        return this.ajax.post('/member/loginByOpenId', {
-            weChatId: weChatId,
-            openId: openId
-        });
     }
 
     /**
@@ -127,7 +131,7 @@ class WeiXin {
             imgUrl: options.imgUrl, // 分享图标
             success() {
                 // 用户确认分享后执行的回调函数
-                options.shareSuccessCallback;
+                options.shareSuccessCallback();
             }
         });
 
@@ -141,7 +145,7 @@ class WeiXin {
             dataUrl: '', // 如果type是music或video，则要提供数据链接，默认为空
             success() {
                 // 用户确认分享后执行的回调函数
-                options.shareSuccessCallback;
+                options.shareSuccessCallback();
             },
             cancel() {
                 // 用户取消分享后执行的回调函数
@@ -157,7 +161,7 @@ class WeiXin {
             imgUrl: options.imgUrl, // 分享图标
             success() {
                 // 用户确认分享后执行的回调函数
-                options.shareSuccessCallback;
+                options.shareSuccessCallback();
             }
         });
 
@@ -169,7 +173,7 @@ class WeiXin {
             imgUrl: options.imgUrl, // 分享图标
             success() {
                 // 用户确认分享后执行的回调函数
-                options.shareSuccessCallback;
+                options.shareSuccessCallback();
             }
         });
 
@@ -181,7 +185,7 @@ class WeiXin {
             imgUrl: options.imgUrl, // 分享图标
             success() {
                 // 用户确认分享后执行的回调函数
-                options.shareSuccessCallback;
+                options.shareSuccessCallback();
             }
         });
     }

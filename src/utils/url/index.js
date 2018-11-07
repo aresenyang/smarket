@@ -2,7 +2,7 @@ export default {
     /**
      * 读取url参数
      */
-    urlParams(ref) {
+    getParam(ref) {
         let rs = {},
             href = window.location.href,
             index = href.indexOf("?");
@@ -18,7 +18,7 @@ export default {
     /**
      * 删除url中的参数
      */
-    urlDelete(ref){
+    delParam(ref){
         let url = window.location.href;
         if (url.indexOf(ref) == -1){
             return url;
@@ -44,7 +44,7 @@ export default {
     /**
      * 增加/修改
      */
-    urlPut(ref, value) {
+    putParam(ref, value) {
         let url = window.location.href;
         // 如果没有参数
         if (url.indexOf('?') == -1){

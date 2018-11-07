@@ -1,91 +1,15 @@
 import url from '../url'
-import Ajax from '../ajax'
 import Cookie from '../cookie'
-import wx from 'weixin-js-sdk'
+import Assist from './assist'
 
-let cookie,ajax,$config;
-
-/**
- * 注入微信配置信息
- */
-function wxConfig(){
-    ajax.post('/article/share', {
-        url: window.location.href.split('#')[0]
-    }).then((data)=> {
-        let _rs = data.content;
-        _rs.jsApiList =  [
-            'onMenuShareTimeline',
-            'onMenuShareAppMessage',
-            'onMenuShareQQ',
-            'onMenuShareWeibo',
-            'scanQRCode',
-            'chooseImage',
-            'previewImage',
-            'uploadImage',
-            'downloadImage',
-            'hideAllNonBaseMenuItem',
-            'checkJsApi',
-            'hideMenuItems',
-            'showMenuItems'
-        ];
-        wx.config(_rs);
-    });
-}
-
-/**
- * 获取code
- */
-function getCode(weChatId){
-    ajax.post('/weChat/getAppId',{
-        weChatId: weChatId
-    }).then((data)=> {
-        let _rs = data.content;
-        if(_rs.appId){
-            let jumpUrl = $config.wx.oAuth.weChatAuthProxy+ '?proUrl=' + encodeURIComponent(url.urlDelete('code'));
-
-            let href = [
-                'https://open.weixin.qq.com/connect/oauth2/authorize?appid=',
-                _rs.appId,
-                '&redirect_uri=',
-                encodeURIComponent(jumpUrl),
-                '&response_type=code&scope=',
-                $config.wx.oAuth.isSilentAuthorise ? 'snsapi_base' : 'snsapi_userinfo',
-                '&state=',
-                '&component_appid=',
-                $config.wx.oAuth.componentAppId
-            ];
-            href.push('#wechat_redirect');
-            window.location.href = href.join('');
-        }
-    })
-}
-/**
- * 获取openId
- */
-function getOpenId(code){
-    return ajax.post('/contact/getByCode', {
-        weChatId: $config.wx.weChatId,
-        code: code
-    });
-}
-/**
- * 通过openId获取用户信息
- */
-function getUser(weChatId, openId){
-    return ajax.post('/member/loginByOpenId', {
-        weChatId: weChatId,
-        openId: openId
-    });
-}
-
-
+let cookie,$config,assist;
 
 class WeiXin {
     constructor(config){
         cookie = new Cookie(config);
-        ajax = new Ajax(config);
         $config = config;
-        wxConfig();
+        assist = new Assist(config)
+        assist.wxConfig();
         /**
          * 是否在微信
          */
@@ -98,23 +22,23 @@ class WeiXin {
     ready(){
         return new Promise((resolve, reject)=>{
             if(cookie.getCookie('openId')){
-                getUser($config.wx.weChatId, cookie.getCookie('openId')).then((data)=>{
+                assist.getUser($config.wx.weChatId, cookie.getCookie('openId')).then((data)=>{
                     resolve(data.content)
                 })
-            }else if(url.urlParams('code')){
-                getOpenId(url.urlParams('code')).then((data)=> {
+            }else if(url.getParam('code')){
+                assist.getOpenId(url.getParam('code')).then((data)=> {
                     let _rs = data.content;
                     if(_rs){
                         cookie.setCookie('openId', _rs.openId);
-                        getUser($config.wx.weChatId, cookie.getCookie('openId')).then((data)=> {
+                        assist.getUser($config.wx.weChatId, cookie.getCookie('openId')).then((data)=> {
                             resolve(data.content)
                         })
                     }else{
-                        getCode($config.wx.weChatId);
+                        assist.getCode($config.wx.weChatId);
                     }
                 })
             }else{
-                getCode($config.wx.weChatId);
+                assist.getCode($config.wx.weChatId);
             }
         })
         

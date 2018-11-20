@@ -12,13 +12,22 @@ class Cookie {
      * @param {*} value 
      * @param {存储时间 可以不传} time 
      */
-    setCookie(key, value, time){
+    setCookie(key, value, options){
         let val = JSON.stringify(value);
-        let t = time?time:cookie.setData.expires
+        let time = cookie.setData.expires;
+        let domain = cookie.setData.domain;
+        if(typeof options == 'object'){
+            if(options.expires){
+                time = options.expires
+            }
+            if(options.domain){
+                domain = options.domain
+            }
+        }
         let d = new Date();
-        d.setTime(d.getTime()+(t*24*60*60*1000));
+        d.setTime(d.getTime()+(time*24*60*60*1000));
         let expires = "expires="+d.toGMTString();
-        document.cookie = `${key}=${$secret.compile(val)}; expires=${expires}; path=${cookie.setData.domain}`
+        document.cookie = `${key}=${$secret.compile(val)}; expires=${expires}; domain=${domain};path=/`
     }
 
     /**

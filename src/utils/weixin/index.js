@@ -9,7 +9,7 @@ class WeiXin {
         cookie = new Cookie(config);
         $config = config;
         assist = new Assist(config)
-        assist.wxConfig();
+        
         /**
          * 是否在微信
          */
@@ -20,6 +20,7 @@ class WeiXin {
      * 初始化微信授权
      */
     ready(){
+        assist.wxConfig();
         return new Promise((resolve, reject)=>{
             if(cookie.getCookie('openId')){
                 assist.getUser($config.wx.weChatId, cookie.getCookie('openId')).then((data)=>{

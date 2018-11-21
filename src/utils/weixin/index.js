@@ -20,27 +20,28 @@ class WeiXin {
      * 初始化微信授权
      */
     ready(){
-        assist.wxConfig();
         return new Promise((resolve, reject)=>{
-            if(cookie.getCookie('openId')){
-                assist.getUser($config.wx.weChatId, cookie.getCookie('openId')).then((data)=>{
-                    resolve(data.content)
-                })
-            }else if(url.getParam('code')){
-                assist.getOpenId(url.getParam('code')).then((data)=> {
-                    let _rs = data.content;
-                    if(_rs){
-                        cookie.setCookie('openId', _rs.openId);
-                        assist.getUser($config.wx.weChatId, cookie.getCookie('openId')).then((data)=> {
-                            resolve(data.content)
-                        })
-                    }else{
-                        assist.getCode($config.wx.weChatId);
-                    }
-                })
-            }else{
-                assist.getCode($config.wx.weChatId);
-            }
+            assist.wxConfig().then(()=>{
+                if(cookie.getCookie('openId')){
+                    assist.getUser($config.wx.weChatId, cookie.getCookie('openId')).then((data)=>{
+                        resolve(data.content)
+                    })
+                }else if(url.getParam('code')){
+                    assist.getOpenId(url.getParam('code')).then((data)=> {
+                        let _rs = data.content;
+                        if(_rs){
+                            cookie.setCookie('openId', _rs.openId);
+                            assist.getUser($config.wx.weChatId, cookie.getCookie('openId')).then((data)=> {
+                                resolve(data.content)
+                            })
+                        }else{
+                            assist.getCode($config.wx.weChatId);
+                        }
+                    })
+                }else{
+                    assist.getCode($config.wx.weChatId);
+                }
+            });
         })
         
     }

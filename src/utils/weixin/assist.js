@@ -9,27 +9,30 @@ class Assist{
         ajax = new Ajax(config);
     }
     wxConfig(){
-        ajax.post('/article/share', {
-            url: window.location.href.split('#')[0]
-        }).then((data)=> {
-            let _rs = data.body.content;
-            _rs.jsApiList =  [
-                'onMenuShareTimeline',
-                'onMenuShareAppMessage',
-                'onMenuShareQQ',
-                'onMenuShareWeibo',
-                'scanQRCode',
-                'chooseImage',
-                'previewImage',
-                'uploadImage',
-                'downloadImage',
-                'hideAllNonBaseMenuItem',
-                'checkJsApi',
-                'hideMenuItems',
-                'showMenuItems'
-            ];
-            wx.config(_rs);
-        });
+        return new Promise((resolve, reject)=>{
+            ajax.post('/article/share', {
+                url: window.location.href.split('#')[0]
+            }).then((data)=> {
+                let _rs = data.body.content;
+                _rs.jsApiList =  [
+                    'onMenuShareTimeline',
+                    'onMenuShareAppMessage',
+                    'onMenuShareQQ',
+                    'onMenuShareWeibo',
+                    'scanQRCode',
+                    'chooseImage',
+                    'previewImage',
+                    'uploadImage',
+                    'downloadImage',
+                    'hideAllNonBaseMenuItem',
+                    'checkJsApi',
+                    'hideMenuItems',
+                    'showMenuItems'
+                ];
+                wx.config(_rs);
+                resolve()
+            });
+        })
     }
     
     /**

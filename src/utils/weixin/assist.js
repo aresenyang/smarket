@@ -12,7 +12,7 @@ class Assist{
         ajax.post('/article/share', {
             url: window.location.href.split('#')[0]
         }).then((data)=> {
-            let _rs = data.content;
+            let _rs = data.body.content;
             _rs.jsApiList =  [
                 'onMenuShareTimeline',
                 'onMenuShareAppMessage',
@@ -39,7 +39,7 @@ class Assist{
         ajax.post('/weChat/getAppId',{
             weChatId: weChatId
         }).then((data)=> {
-            let _rs = data.content;
+            let _rs = data.body.content;
             if(_rs.appId){
                 let jumpUrl = $config.wx.oAuth.weChatAuthProxy+ '?proUrl=' + encodeURIComponent(url.delParam('code'));
     

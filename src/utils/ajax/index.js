@@ -26,7 +26,7 @@ class Ajax {
          * 拦截 ajax 响应
          */
         ajax.interceptors.response.use((response)=> {
-            return response.data.body;
+            return response.data;
         });
     }
 
